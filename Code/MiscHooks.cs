@@ -213,9 +213,9 @@ namespace Celeste.Mod.EeveeHelper {
 
             cursor.Emit(OpCodes.Ldarg_0);
             cursor.EmitDelegate<Action<Level>>(self => {
-                if (LoadingGlobalModified) {
+                if (LoadingGlobalModified && self.Entities?.ToAdd != null) {
                     foreach (var entity in self.Entities.ToAdd.Skip(LastLoadedGlobalModified))
-                        entity.Add(new TagAdderComponent(LoadingGlobalTags));
+                        entity?.Add(new TagAdderComponent(LoadingGlobalTags));
                     LastLoadedGlobalModified = 0;
                     LoadingGlobalModified = false;
                 }
@@ -225,9 +225,8 @@ namespace Celeste.Mod.EeveeHelper {
 
         //Small optimization here where if it isn't an EntityContainingSet or has an EntityContainer it doesn't worry about the messy code. This needs to be improved a ton already but whatever.
         private static bool Collide_Check_Entity_Entity(On.Monocle.Collide.orig_Check_Entity_Entity orig, Entity a, Entity b) {
-            if ((a is CollidableModifier.Solidifier aSolid && aSolid.Entity == b) ||
+            if (a == null || b == null || (a is CollidableModifier.Solidifier aSolid && aSolid.Entity == b) ||
                 (b is CollidableModifier.Solidifier bSolid && bSolid.Entity == a)) {
-
                 return false;
             }
             EntityContainer aContainer = null;
@@ -416,18 +415,25 @@ namespace Celeste.Mod.EeveeHelper {
         private static void Solid_MoveHExact(ILContext il) {
             ILCursor cursor = new ILCursor(il);
             int entityIndex = il.Body.Variables.FirstOrDefault(v => v.VariableType.FullName == "Celeste.Actor").Index;
-            int i = 4; //We *expect* the value to be 4, so we set it there just in case.
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdloc(entityIndex), i2 => i2.MatchLdarg(0), i3 => i3.MatchLdfld<Platform>("LiftSpeed"))) {
-                cursor.Emit(OpCodes.Ldloc, entityIndex);
-                cursor.EmitDelegate<Func<Vector2, Actor, Vector2>>((v, A) => EntityContainerMover.LiftSpeedFix ? A.LiftSpeed : v);
+            while (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchLdarg(0), i2 => i2.MatchLdcI4(1), i3 => i3.MatchStfld<Entity>("Collidable"))) {
+                ILLabel label = cursor.MarkLabel();
+                ILCursor clone = cursor.Clone();
+                if (clone.TryGotoPrev(MoveType.Before, instr => instr.MatchLdloc(entityIndex), i2 => i2.MatchLdarg(0), i3 => i3.MatchLdfld<Platform>("LiftSpeed"))) {
+                    clone.Emit(OpCodes.Ldsfld, typeof(EntityContainerMover).GetField(nameof(EntityContainerMover.LiftSpeedFix), BindingFlags.Static|BindingFlags.Public));
+                    clone.Emit(OpCodes.Brtrue, label);
+                }
             }
         }
         private static void Solid_MoveVExact(ILContext il) {
             ILCursor cursor = new ILCursor(il);
             int entityIndex = il.Body.Variables.FirstOrDefault(v => v.VariableType.FullName == "Celeste.Actor").Index;
-            while (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdloc(entityIndex), i2 => i2.MatchLdarg(0), i3 => i3.MatchLdfld<Platform>("LiftSpeed"))) {
-                cursor.Emit(OpCodes.Ldloc, entityIndex);
-                cursor.EmitDelegate<Func<Vector2, Actor, Vector2>>((v, A) => EntityContainerMover.LiftSpeedFix ? A.LiftSpeed : v);
+            while (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchLdarg(0), i2 => i2.MatchLdcI4(1), i3 => i3.MatchStfld<Entity>("Collidable"))) {
+                ILLabel label = cursor.MarkLabel();
+                ILCursor clone = cursor.Clone();
+                if(clone.TryGotoPrev(MoveType.Before, instr => instr.MatchLdloc(entityIndex), i2 => i2.MatchLdarg(0), i3 => i3.MatchLdfld<Platform>("LiftSpeed"))) {
+                    clone.Emit(OpCodes.Ldsfld, typeof(EntityContainerMover).GetField(nameof(EntityContainerMover.LiftSpeedFix), BindingFlags.Static|BindingFlags.Public));
+                    clone.Emit(OpCodes.Brtrue, label);
+                }
             }
         }
 
