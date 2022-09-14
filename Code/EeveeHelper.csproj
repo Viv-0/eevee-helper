@@ -94,6 +94,7 @@
     <Compile Include="Handlers\IMoveable.cs" />
     <Compile Include="Handlers\Impl\Compat\MultipleNodeTrackSpinnerHandler.cs" />
     <Compile Include="Handlers\Impl\AxisMoverHandler.cs" />
+    <Compile Include="Handlers\Impl\DecalHandler.cs" />
     <Compile Include="Handlers\Impl\WaterHandler.cs" />
     <Compile Include="Handlers\Impl\RotateSpinnerHandler.cs" />
     <Compile Include="Handlers\Impl\TrackSpinnerHandler.cs" />

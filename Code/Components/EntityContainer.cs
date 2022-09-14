@@ -5,6 +5,7 @@ using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -229,6 +230,8 @@ namespace Celeste.Mod.EeveeHelper.Components {
             Contained.RemoveAll(e => e.Entity?.Scene == null);
         }
 
+        internal static FieldInfo f_Decal_textures = typeof(Decal).GetField("textures", BindingFlags.NonPublic|BindingFlags.Instance);
+
         public bool CheckCollision(Entity entity) {
             if (entity.Collider != null) {
                 var collidable = entity.Collidable;
@@ -241,11 +244,18 @@ namespace Celeste.Mod.EeveeHelper.Components {
                 entity.Collidable = collidable;
                 Entity.Collidable = parentCollidable;
                 return result;
-            } else {
+            }else {
                 return entity.X >= Entity.Left && entity.Y >= Entity.Top && entity.X <= Entity.Right && entity.Y <= Entity.Bottom;
             }
         }
 
+        internal bool CheckDecal(Decal decal) {
+            List<MTexture> ms = (List<MTexture>)f_Decal_textures.GetValue(decal);
+            if (ms.Count == 0) return false;
+            MTexture m = ms[0];
+            Rectangle r = new Rectangle((int)(decal.Position.X - (m.ClipRect.Width / 2)), (int)(decal.Position.Y - (m.ClipRect.Height / 2)), m.ClipRect.Width, m.ClipRect.Height);
+            return Collide.CheckRect(Entity, r);
+        }
         public Rectangle GetContainedBounds() {
             var bounds = new Rectangle();
 

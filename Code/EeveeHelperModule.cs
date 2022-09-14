@@ -44,6 +44,8 @@ namespace Celeste.Mod.EeveeHelper {
                 (entity, container) => SwapBlockHandler.InsideCheck(container, true, DynamicData.For(entity as SwapBlock)));
             EntityHandler.RegisterInherited<SwapBlock>((entity, container) => new SwapBlockHandler(entity, false),
                 (entity, container) => SwapBlockHandler.InsideCheck(container, false, DynamicData.For(entity as SwapBlock)));
+            EntityHandler.RegisterInherited<Decal>((entity, container) => new DecalHandler(entity),
+                (entity, container) => container.CheckDecal(entity as Decal));
         }
 
         public override void Unload() {

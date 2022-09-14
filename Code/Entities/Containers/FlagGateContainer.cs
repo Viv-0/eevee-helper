@@ -106,7 +106,7 @@ namespace Celeste.Mod.EeveeHelper.Entities.Containers {
 
             Add(_Container = new EntityContainerMover(data, true) {
                 OnFit = OnFit,
-                DefaultIgnored = e => e is FlagGateContainer,
+                DefaultIgnored = e => e is FlagGateContainer, 
                 OnAttach = h => Depth = Math.Min(Depth, h.Entity.Depth - 1)
             });
         }
@@ -117,7 +117,6 @@ namespace Celeste.Mod.EeveeHelper.Entities.Containers {
             activated = vanilla ?
                 Switch.CheckLevelFlag(scene as Level) :
                 ((scene as Level).Session.GetFlag(flag) != notFlag);
-
             if (activated) {
                 MoveTo(nodes[0]);
                 icon.Rate = 0f;

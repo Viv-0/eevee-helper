@@ -33,6 +33,8 @@ namespace Celeste.Mod.EeveeHelper {
             IL.Celeste.Solid.MoveHExact += Solid_MoveHExact;
             IL.Celeste.Solid.MoveVExact += Solid_MoveVExact;
 
+            On.Celeste.StaticMover.Move += StaticMover_Move;
+
             IL.Celeste.SwapBlock.Update += SwapBlock_Update;
 
 
@@ -53,11 +55,17 @@ namespace Celeste.Mod.EeveeHelper {
             IL.Celeste.Solid.MoveVExact -= Solid_MoveVExact;
 
             IL.Celeste.SwapBlock.Update -= SwapBlock_Update;
+            On.Celeste.StaticMover.Move -= StaticMover_Move;
 
             levelLoadHook?.Dispose();
             zipMoverSequenceHook?.Dispose();
         }
 
+
+        private static void StaticMover_Move(On.Celeste.StaticMover.orig_Move orig, StaticMover self, Vector2 amount) {
+            if (self.Platform is Solid && self.Entity is Decal && EntityContainerMover.DecalStaticMoverFix) return;
+            orig(self, amount);
+        }
         private static HashSet<EntityData> GlobalModifiedData = new HashSet<EntityData>();
         private static int LastLoadedGlobalModified;
         private static bool LoadingGlobalModified;
